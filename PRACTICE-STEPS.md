@@ -1,340 +1,395 @@
-# Mario Game Deployment on AWS EKS using Terraform and Kubernetes
+# Mario Game Deployment on AWS EKS using Terraform
 
-## Project Overview
+## Project Flow
 
-This project deploys the Mario game application on AWS EKS cluster using Terraform and Kubernetes.
+Terraform
+   |
+   |
+AWS EKS Cluster
+   |
+   |
+Worker Nodes
+   |
+   |
+Kubernetes Deployment
+   |
+   |
+Pods
+   |
+   |
+Kubernetes LoadBalancer Service
+   |
+   |
+AWS Network Load Balancer
+   |
+   |
+Browser
 
-Technologies Used:
 
-- AWS EKS
-- Terraform
-- Kubernetes
-- Docker
-- Docker Hub
-- AWS Load Balancer
-- IAM
-- VPC
+==================================================
+
+# 1. Go to Project Directory
 
 
-# 1. Clone Repository
-
-git clone <repository-url>
-
-cd Mario-Kubernetes-Terraform-EKS
+cd Mario-on-Kubernetes-using-Terraform/EKS-TF
 
 
-# 2. Check Terraform Files
+Check files:
+
 
 ls
 
-Expected files:
+
+Files used:
 
 main.tf
 provider.tf
 variables.tf
 outputs.tf
-backend.tf
+deployment.yaml
+service.yaml
 
 
-# 3. Configure AWS CLI
+==================================================
 
-aws configure
-
-Enter:
-
-AWS Access Key
-AWS Secret Key
-AWS Region
+# 2. Check AWS Configuration
 
 
-Verify:
+Verify AWS account:
+
 
 aws sts get-caller-identity
 
 
-# 4. Initialize Terraform
+Check configured region:
+
+
+aws configure list
+
+
+==================================================
+
+# 3. Terraform Commands
+
+
+Initialize Terraform:
+
 
 terraform init
 
 
-# 5. Check Terraform Configuration
+Validate Terraform:
+
 
 terraform validate
 
 
-# 6. Create Execution Plan
+Create Terraform plan:
+
 
 terraform plan
 
 
-# 7. Create AWS Infrastructure
+Create AWS resources:
+
 
 terraform apply
 
 
-Resources Created:
+Confirm:
 
-- IAM Roles
+yes
+
+
+Terraform created:
+
+
 - EKS Cluster
+- IAM Roles
 - Node Group
 - Security Groups
 - OIDC Provider
-- Load Balancer Controller Role
 
 
-# 8. Connect Kubernetes with EKS
+==================================================
+
+# 4. Check EKS Cluster
+
+
+List EKS clusters:
+
+
+aws eks list-clusters --region sa-east-1
+
+
+Check cluster status:
+
+
+aws eks describe-cluster \
+--name EKS_CLOUD \
+--region sa-east-1
+
+
+Expected:
+
+
+ACTIVE
+
+
+==================================================
+
+# 5. Connect kubectl with EKS
+
+
+Update kubeconfig:
+
 
 aws eks update-kubeconfig \
 --name EKS_CLOUD \
 --region sa-east-1
 
 
-Verify:
+Check context:
+
 
 kubectl config get-contexts
 
 
-# 9. Check Cluster Nodes
+==================================================
+
+# 6. Check Worker Nodes
+
+
+View nodes:
+
 
 kubectl get nodes
 
 
 Expected:
 
+
 STATUS
+
 Ready
 
 
-# 10. Deploy Mario Application
+Detailed node check:
 
 
-Deploy application:
+kubectl describe node <node-name>
+
+
+==================================================
+
+# 7. Deploy Mario Application
+
+
+Create deployment:
+
 
 kubectl apply -f deployment.yaml
 
 
+Check deployment:
+
+
+kubectl get deployment
+
+
 Check pods:
+
 
 kubectl get pods
 
 
-Detailed:
+Expected:
+
+
+mario-deployment pods
+
+Running
+
+
+==================================================
+
+# 8. Check Pod Information
+
+
+Describe pod:
+
 
 kubectl describe pod <pod-name>
 
 
-# 11. Create Kubernetes Service
+Check logs:
 
 
-Deploy LoadBalancer:
+kubectl logs <pod-name>
+
+
+==================================================
+
+# 9. Create LoadBalancer Service
+
+
+Apply service:
+
 
 kubectl apply -f service.yaml
 
 
 Check service:
 
+
 kubectl get svc
 
 
-Example:
-
-TYPE
-LoadBalancer
+Example output:
 
 
-Get LoadBalancer URL:
+mario-service
 
-kubectl describe svc mario-service
+TYPE: LoadBalancer
 
 
-# 12. Access Application
+==================================================
+
+# 10. Get Application URL
 
 
 Check LoadBalancer DNS:
 
-kubectl get svc
-
-
-Open:
-
-http://LoadBalancer-DNS
-
-
-# 13. Kubernetes Scaling
-
-
-Check deployment:
-
-kubectl get deployment
-
-
-Scale application:
-
-kubectl scale deployment mario-deployment --replicas=3
-
-
-Verify:
-
-kubectl get pods
-
-
-# 14. Horizontal Pod Autoscaler
-
-
-Apply HPA:
-
-kubectl apply -f horizontal-pod-autoscaler.yaml
-
-
-Check:
-
-kubectl get hpa
-
-
-Describe:
-
-kubectl describe hpa
-
-
-# 15. Network Policy
-
-
-Apply:
-
-kubectl apply -f network-policy.yaml
-
-
-Check:
-
-kubectl get networkpolicy
-
-
-# 16. Docker Image
-
-
-Login Docker Hub:
-
-docker login
-
-
-Pull image:
-
-docker pull chaitanyathite/mario:latest
-
-
-Run container:
-
-docker run -d \
--p 80:80 \
---name mario-game \
-chaitanyathite/mario:latest
-
-
-Check:
-
-docker ps
-
-
-Open:
-
-http://localhost
-
-
-# 17. Create Own Docker Image
-
-
-Tag image:
-
-docker tag sevenajay/mario:latest chaitanyathite/mario:latest
-
-
-Push:
-
-docker push chaitanyathite/mario:latest
-
-
-Verify:
-
-docker images
-
-
-# 18. Debug Commands
-
-
-Check pods:
-
-kubectl get pods
-
-
-Pod logs:
-
-kubectl logs <pod-name>
-
-
-Service details:
 
 kubectl describe svc mario-service
 
 
-Node details:
-
-kubectl describe node <node-name>
+or
 
 
-Events:
+kubectl get svc
+
+
+Copy:
+
+
+xxxxx.elb.sa-east-1.amazonaws.com
+
+
+Open:
+
+
+http://xxxxx.elb.sa-east-1.amazonaws.com
+
+
+Mario game will open in browser.
+
+
+==================================================
+
+# 11. Scaling Pods
+
+
+Check pods:
+
+
+kubectl get pods
+
+
+Scale deployment:
+
+
+kubectl scale deployment mario-deployment --replicas=2
+
+
+Verify:
+
+
+kubectl get pods
+
+
+==================================================
+
+# 12. Troubleshooting Commands
+
+
+Check all pods:
+
+
+kubectl get pods
+
+
+Pod details:
+
+
+kubectl describe pod <pod-name>
+
+
+Service details:
+
+
+kubectl describe svc mario-service
+
+
+Check nodes:
+
+
+kubectl get nodes
+
+
+Check events:
+
 
 kubectl get events
 
 
-# 19. Destroy Infrastructure
+==================================================
+
+# 13. Delete Application
 
 
-Remove Kubernetes resources:
+Delete deployment:
+
 
 kubectl delete -f deployment.yaml
+
+
+Delete service:
+
 
 kubectl delete -f service.yaml
 
 
-Destroy AWS resources:
+==================================================
+
+# 14. Destroy AWS Resources
+
+
+Destroy Terraform infrastructure:
+
 
 terraform destroy
 
 
-# Complete Architecture Flow
+Confirm:
 
 
-Developer
-
-↓
-
-Docker Image
-
-↓
-
-Docker Hub
-
-↓
-
-AWS EKS
-
-↓
-
-Kubernetes Deployment
-
-↓
-
-Kubernetes Service
-
-↓
-
-AWS LoadBalancer
-
-↓
-
-User Browser
+yes
 
 
-# Final Result
+==================================================
 
-Mario Game successfully deployed on AWS EKS using Terraform and Kubernetes.
+# Project Explanation
+
+
+I created AWS EKS infrastructure using Terraform.
+
+Terraform created the EKS cluster, IAM roles, security groups, and worker nodes.
+
+After connecting kubectl with EKS, I deployed the Mario application using Kubernetes Deployment.
+
+I exposed the application using Kubernetes LoadBalancer Service.
+
+AWS created the Network Load Balancer and provided DNS access.
+
+The application became accessible through the browser.
